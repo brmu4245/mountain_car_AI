@@ -64,7 +64,7 @@ import collections
 
 def main():
     env = gym.make('MountainCar-v0')
-    num_of_episodes = 5000
+    num_of_episodes = 100
     num_of_actions_per_episode = 200
     action = 2
     reward = -1
@@ -72,10 +72,10 @@ def main():
     q_values = collections.Counter()
     episode_count = 0
     rewards_for_each_episode = []
-    car = Q_learner(env, vel_weight=2, pos_weight=1, alpha=0.5, discount=0.9, epsilon=0.9, q_values=q_values)
+    car = Q_learner(env, vel_weight=5, pos_weight=10, alpha=0.5, discount=1, epsilon=0.0, q_values=q_values)
     # state = env.reset()
 
-    decay = car.epsilon / 1000
+    decay = car.epsilon / (num_of_episodes * 0.5)
     for i_episode in range(num_of_episodes):
         random_counter = 0
         state = env.reset()
@@ -88,7 +88,7 @@ def main():
             if np.random.random() >= (1 - car.epsilon):
                 random_counter += 1
                 action = random.randint(0, 2)
-                car.get_q(env, action, q)
+                # car.get_q(env, action, q)
             else:
                 action = car.choose_action(env, action, q)
             # print("position (goal = 0.5) and velocity = " + str(state))
@@ -147,38 +147,38 @@ class Q_learner():
         state = (position, velocity)
         feat_1_vel = env.state[1]
         feat_2_pos = env.state[0]
-        if self.q_values[(state, action)] == 0 or self.q_values[(state, action)] == float("-inf"):
-            q_value = self.vel_weight * feat_1_vel + feat_2_pos * self.pos_weight
-            self.q_values[(state, action)] = q_value
-            self.counter_initial += 1
-        else:
-            self.counter_post += 1
+        # if self.q_values[(state, action)] == 0 or self.q_values[(state, action)] == float("-inf"):
+        #     q_value = self.vel_weight * feat_1_vel + feat_2_pos * self.pos_weight
+        #     self.q_values[(state, action)] = q_value
+        #     self.counter_initial += 1
+        # else:
+        self.counter_post += 1
             # max_q = find_max_q(reward)
             # print("In get_q, the q_value = " + str(q_value))
             # print(str(self.vel_weight) + " * " + str(feat_1_vel) + " + " + str(feat_2_pos) + " * " + str(self.pos_weight))
             # q_value = float(f"{q_value:.2f}")
             #     difference = self.calc_diff(env, action, reward, q_value)
             #     print("velocity = " + str(state[1]))
-            if state[1] >= 0.01 or state[1] <= -0.01:
-                reward = 10
-            elif state[1] >= 0.02 or state[1] <= -0.02:
-                reward = 20
-            elif state[1] >= 0.03 or state[1] <= -0.03:
-                reward = 30
-            elif state[1] >= 0.04 or state[1] <= -0.04:
-                reward = 40
-            elif state[1] >= 0.05 or state[1] <= -0.05:
-                reward = 50
-            elif state[1] >= 0.06 or state[1] <= -0.06:
-                reward = 60
-            else:
-                reward = -30
-            new_q = (reward + self.discount * q)
-            difference = (new_q - q)
-            self.vel_weight = self.vel_weight + self.alpha * difference * feat_1_vel
-            self.pos_weight = self.pos_weight + self.alpha * difference * feat_2_pos
-            # print("Old q_value = " + str(self.q_values[(state, action)]))
-            self.q_values[(state, action)] = self.vel_weight * feat_1_vel + self.pos_weight * feat_2_pos
+        if state[1] >= 0.06 or state[1] <= -0.06:
+            reward = 500
+        elif state[1] >= 0.05 or state[1] <= -0.05:
+            reward = 400
+        elif state[1] >= 0.04 or state[1] <= -0.04:
+            reward = 300
+        # elif state[1] >= 0.03 or state[1] <= -0.03:
+        #     reward = 200
+        # elif state[1] >= 0.02 or state[1] <= -0.02:
+        #     reward = 100
+        # elif state[1] >= 0.01 or state[1] <= -0.01:
+        #     reward = -50
+        else:
+            reward = -100
+        new_q = (reward + self.discount * q)
+        difference = (new_q - q)
+        self.vel_weight = self.vel_weight + self.alpha * difference * feat_1_vel
+        self.pos_weight = self.pos_weight + self.alpha * difference * feat_2_pos
+        # print("Old q_value = " + str(self.q_values[(state, action)]))
+        self.q_values[(state, action)] = self.vel_weight * feat_1_vel + self.pos_weight * feat_2_pos
             # self.q_values[(state, action)] = self.q_values[(state, action)] + (self.alpha * difference)
             # print("New q_value = " + str(self.q_values[(state, action)]))
 
@@ -257,15 +257,15 @@ class Q_learner():
         velocity = float(f"{env.state[1]:.2f}")  # * 100
         position = float(f"{env.state[0]:.1f}")  # * 10
         state = (position, velocity)
-        if self.q_values[(state, action)] == float("-inf"):  #
-            # print("got here")
-            velocity = float(f"{env.state[1]:.2f}")  # * 100
-            position = float(f"{env.state[0]:.1f}")  # * 10
-            state = (position, velocity)
-            self.q_values[(state, action)] = self.get_q(env, action, q)
-            new_action = random.randint(0, 2)
-            # print("New-assigned random action = " + str(new_action))
-            return new_action
+        # if self.q_values[(state, action)] == float("-inf"):  #
+        #     # print("got here")
+        #     velocity = float(f"{env.state[1]:.2f}")  # * 100
+        #     position = float(f"{env.state[0]:.1f}")  # * 10
+        #     state = (position, velocity)
+        #     self.q_values[(state, action)] = self.get_q(env, action, q)
+        #     new_action = random.randint(0, 2)
+        #     # print("New-assigned random action = " + str(new_action))
+        #     return new_action
 
 
         # self.epsilon = self.epsilon + self.epsilon
@@ -278,22 +278,22 @@ class Q_learner():
         #     print("EPSILON!!! Exploring a new action!!!!")
         #     return rnd_move
 
-        else:
-            velocity = float(f"{env.state[1]:.2f}")  # * 100
-            position = float(f"{env.state[0]:.1f}")  # * 10
-            state = (position, velocity)
-            actions = [0, 1, 2]
-            best_action = 2
-            best_q = float("-inf")
-            for act in actions:
-                curr_q = self.q_values[(state, act)]
-                # print("For state" + str(state) + " and action " + str(act) + ",... the q-value = " + str(curr_q))
-                if curr_q > best_q:
-                    best_q = curr_q
-                    best_action = act
+        # else:
+        velocity = float(f"{env.state[1]:.2f}")  # * 100
+        position = float(f"{env.state[0]:.1f}")  # * 10
+        state = (position, velocity)
+        actions = [0, 1, 2]
+        best_action = 2
+        best_q = float("-inf")
+        for act in actions:
+            curr_q = self.q_values[(state, act)]
+            print("For state" + str(state) + " and action " + str(act) + ",... the q-value = " + str(curr_q))
+            if curr_q > best_q:
+                best_q = curr_q
+                best_action = act
 
-            # print("Best action = " + str(best_action))
-            return best_action
+        print("Best action = " + str(best_action))
+        return best_action
 
             # stored_q = self.q_values[(state, action)]
             # print("Old Q-value = " + str(stored_q) + " ==>> New Q-value = " + str(q_value))
