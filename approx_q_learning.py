@@ -72,10 +72,10 @@ def main():
     q_values = collections.Counter()
     episode_count = 0
     rewards_for_each_episode = []
-    car = Q_learner(env, vel_weight=5, pos_weight=10, alpha=0.5, discount=1, epsilon=0.0, q_values=q_values)
+    car = Q_learner(env, vel_weight=2, pos_weight=1, alpha=0.5, discount=1, epsilon=0.1, q_values=q_values)
     # state = env.reset()
 
-    decay = car.epsilon / (num_of_episodes * 0.5)
+    decay = car.epsilon / num_of_episodes
     for i_episode in range(num_of_episodes):
         random_counter = 0
         state = env.reset()
@@ -159,20 +159,20 @@ class Q_learner():
             # q_value = float(f"{q_value:.2f}")
             #     difference = self.calc_diff(env, action, reward, q_value)
             #     print("velocity = " + str(state[1]))
-        if state[1] >= 0.06 or state[1] <= -0.06:
+        if state[1] >= 0.01 or state[1] <= -0.06:
+            reward = 2000
+        elif state[1] >= 0.008 or state[1] <= -0.05:
+            reward = 1000
+        elif state[1] >= 0.006 or state[1] <= -0.04:
             reward = 500
-        elif state[1] >= 0.05 or state[1] <= -0.05:
-            reward = 400
-        elif state[1] >= 0.04 or state[1] <= -0.04:
-            reward = 300
-        # elif state[1] >= 0.03 or state[1] <= -0.03:
-        #     reward = 200
-        # elif state[1] >= 0.02 or state[1] <= -0.02:
-        #     reward = 100
-        # elif state[1] >= 0.01 or state[1] <= -0.01:
-        #     reward = -50
+        elif state[1] >= 0.004 or state[1] <= -0.03:
+            reward = 200
+        elif state[1] >= 0.002 or state[1] <= -0.02:
+            reward = 100
+        elif state[1] >= 0.001 or state[1] <= -0.01:
+            reward = -50
         else:
-            reward = -100
+            reward = -500
         new_q = (reward + self.discount * q)
         difference = (new_q - q)
         self.vel_weight = self.vel_weight + self.alpha * difference * feat_1_vel
@@ -254,9 +254,9 @@ class Q_learner():
     #     return q_diff
 
     def choose_action(self, env, action, q):
-        velocity = float(f"{env.state[1]:.2f}")  # * 100
-        position = float(f"{env.state[0]:.1f}")  # * 10
-        state = (position, velocity)
+        # velocity = float(f"{env.state[1]:.2f}")  # * 100
+        # position = float(f"{env.state[0]:.1f}")  # * 10
+        # state = (position, velocity)
         # if self.q_values[(state, action)] == float("-inf"):  #
         #     # print("got here")
         #     velocity = float(f"{env.state[1]:.2f}")  # * 100
