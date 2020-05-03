@@ -173,6 +173,7 @@ class Q_learner():
             reward = -50
         else:
             reward = -500
+        # I'm onto something!
         new_q = (reward + self.discount * q)
         difference = (new_q - q)
         self.vel_weight = self.vel_weight + self.alpha * difference * feat_1_vel
