@@ -64,13 +64,13 @@ import collections
 
 def main():
     env = gym.make('MountainCar-v0')
-    num_of_episodes = 10000
-    action = 1
+    num_of_episodes = 5000
+    action = 2
     q = 0
     q_values = collections.Counter()
     average_reward_per_episode = []
     episode_count = 0
-    car = Q_learner(env, vel_weight=10, pos_weight=1, alpha=1, discount=1, epsilon=0.9, q_values=q_values)
+    car = Q_learner(env, vel_weight=10, pos_weight=1, alpha=1, discount=1, epsilon=0.2, q_values=q_values)
     decay = car.epsilon / num_of_episodes
     for i_episode in range(num_of_episodes):
         done = False
@@ -85,21 +85,29 @@ def main():
             t += 1
             if i_episode >= (num_of_episodes - 5):
                 env.render()
-            car.get_q(env, action)            # CHANGED POSITION
+            # env.render()
+            # car.get_q(env, action)            # CHANGED POSITION
             if np.random.random() >= (1 - car.epsilon):
                 random_counter += 1
                 action = random.randint(0, 2)
             else:
                 action = car.choose_action(env, action, q)
-            # car.get_q(env, action)
+            # car.get_q(env, action)            # NEXT CHANGE ...
             state, reward, done, info = env.step(action)
+            car.get_q(env, action)
             total_reward = total_reward + reward
+            # velocity = float(f"{env.state[1]:.2f}")  # * 100
+            # position = float(f"{env.state[0]:.1f}")  # * 10
+            # state = (position, velocity)
+            # print("Q = " + str(car.q_values[(state, action)]))
             if done:
-                print("Episode finished after {} timesteps".format(t + 1))
+                # print("Episode finished after {} timesteps".format(t + 1))
                 break
         episode_count = episode_count + 1
-        print("The total reward for round " + str(episode_count) + " is " + str(
-            total_reward) + "! Random was visited " + str(random_counter) + " times.")
+        # print("The total reward for round " + str(episode_count) + " is " + str(
+        #     total_reward) + "! Random was visited " + str(random_counter) + " times.")
+        # print("The total reward was " + str(total_reward) + "! Random was visited " +
+        #       str(random_counter) + " times for episode "+ str(episode_count) + "." )
         # print("the initial q_values were visited " + str(car.counter_initial) + " times, and the other " + str(car.counter_post) + " times.")
 
         # total_reward = however many times up to 200 until the car makes it
@@ -144,17 +152,21 @@ class Q_learner():
     def get_q(self, env, action):
         """
             Looking at the current state, we will update Q_value and weights.
+            The next 2 lines help to quantify the state space so that there are not millions of conditions.
         """
         velocity = float(f"{env.state[1]:.2f}")  # * 100
         position = float(f"{env.state[0]:.1f}")  # * 10
         state = (position, velocity)
-        feat_1_vel = env.state[1]
-        feat_2_pos = env.state[0]
+        feat_1_vel = velocity # env.state[1]
+        feat_2_pos = position # env.state[0]
         self.counter_post += 1
+        """ 
+            The following showed some promise after 10,000 episodes...
+        """
         # if state[1] >= 0.01 or state[1] <= -0.01:
-        #     reward = 2000
+        #     reward = 900
         # elif state[1] >= 0.008 or state[1] <= -0.008:
-        #     reward = 1000
+        #     reward = 700
         # elif state[1] >= 0.006 or state[1] <= -0.006:
         #     reward = 500
         # elif state[1] >= 0.004 or state[1] <= -0.004:
@@ -164,11 +176,37 @@ class Q_learner():
         # elif state[1] >= 0.001 or state[1] <= -0.001:
         #     reward = 10
         # else:
-        #     reward = -100
-        if (state[1] >= 0.001 or state[1] <= -0.001) and (state[0] > -0.5 or state[0] < -0.5):
-            reward = 10
+        #     reward = -1000
+        """
+            The following is very random as far as success even with 100,000 episodes. 
+        """
+        # if state[1] >= 0.05 or state[1] <= -0.05:
+        #     reward = 100
+        # elif state[1] >= 0.03 or state[1] <= -0.03:
+        #     reward = 80
+        # elif state[1] >= 0.01 or state[1] <= -0.01:
+        #     reward = 60
+        # elif state[1] >= 0.007 or state[1] <= -0.007:
+        #     reward = 35
+        # elif state[1] >= 0.004 or state[1] <= -0.004:
+        #     reward = 20
+        # elif state[1] >= 0.001 or state[1] <= -0.001:
+        #     reward = 10
+        # else:
+        #     reward = -60
+        """
+            The reward below seemed to produce better results, still sporadic in success.
+        """
+        if (state[1] >= 0.001 or state[1] <= -0.001) and (state[0] > -0.4 or state[0] < -0.6):
+            reward = 6.0000005
         else:
-            reward = -10
+            reward = -1
+        if state[0] >= 0.5:
+            print("YYEEESSSSSSSSSSSSSSSSSSS!!!!!! WE MADE IT!!!!*************************************************************************")
+        elif state[0] > 0.3:
+            print("Wow! The car almost made it to the top!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#######################")
+        elif state[0] > 0:
+            print('THE CAR IS GETTING PAST 0!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
         new_q = (reward + self.discount * self.q_values[(state, action)])
         difference = (new_q - self.q_values[(state, action)])
         self.vel_weight = self.vel_weight + self.alpha * difference * feat_1_vel
@@ -181,7 +219,7 @@ class Q_learner():
         position = float(f"{env.state[0]:.1f}")  # * 10
         state = (position, velocity)
         actions = [0, 1, 2]
-        best_action = 1
+        best_action = 2
         best_q = float("-inf")
         for act in actions:
             curr_q = self.q_values[(state, act)]
@@ -189,7 +227,7 @@ class Q_learner():
             if curr_q > best_q:
                 best_q = curr_q
                 best_action = act
-        print("For state" + str(state) + " and action " + str(best_action) + ",... the q-value = " + str(curr_q))
+        # print("For state" + str(state) + " and action " + str(best_action) + ",... the q-value = " + str(curr_q))
         return best_action
 
 
